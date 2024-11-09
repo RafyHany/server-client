@@ -1,0 +1,6 @@
+GET ./files/index.html
+GET ./files/profile.jpg
+GET ./files/test.txt
+POST ./files/index2.html
+POST ./files/test2.txt
+POST ./files/profile2.jpg
