@@ -2,7 +2,7 @@
 
 
 #To run server
--> cd server
+-> cd server 
 -> python server.py
 
 
