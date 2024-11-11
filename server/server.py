@@ -39,7 +39,6 @@ class SimpleHTTPServer:
             while True:
                 client_socket, addr = self.server_socket.accept()
                 print(f"Connection from {addr}")
-                self.number_threads += 1
                 client_handler = threading.Thread(target=self.handle_client, args=(client_socket,))
                 client_handler.start()
         except KeyboardInterrupt:
@@ -52,12 +51,16 @@ class SimpleHTTPServer:
         with client_socket:
             while keep_alive:
                 try:
+                    client_socket.settimeout(self.timeout / threading.active_count())
                     request = client_socket.recv(1024)
                     if not request:
-                        self.number_threads -= 1
                         break
-                    client_socket.settimeout(self.timeout / self.number_threads)
+
                     print(f"Received request:\n{request}")
+                    if request == b"exit":
+                        keep_alive = False
+                        print("Client requested to close connection.")
+                        break
                     request_lines = request.split(b'\r\n')
                     request_line = request_lines[0].decode('utf-8')
                     method, path, _ = request_line.split()
@@ -72,13 +75,11 @@ class SimpleHTTPServer:
 
                 except socket.timeout:
                     print("Connection timed out.")
-                    self.number_threads -= 1
                     keep_alive = False
                 except Exception as e:
                     print(f"Error handling request: {e}")
                     response = HTTPResponse.build_response(500, b"Internal Server Error", keep_alive)
                     client_socket.sendall(response)
-                    self.number_threads -= 1
                     keep_alive = False
 
     def handle_get(self, client_socket, path, request):
@@ -102,7 +103,6 @@ class SimpleHTTPServer:
 
     def handle_post(self, client_socket, path, request):
         headers, body = request.split(b'\r\n\r\n', 1)
-
         content_length = int([line for line in headers.split(b'\r\n') if b'Content-Length' in line][0].split(b': ')[1])
         while len(body) < content_length:
             body += client_socket.recv(1024)
