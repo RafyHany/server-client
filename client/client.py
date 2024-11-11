@@ -79,12 +79,13 @@ def execute_commands_from_file(file, http_client):
                     command = line.strip()
                     if not command:
                         continue
+                    if command.lower() == "exit":
+                        client_socket.sendall(b"exit")
+                        print("Exiting Client")
+                        break
                     if len(command.split()) < 2:
                         print(f"Invalid command: {command}")
                         continue
-                    if command.lower() == "exit":
-                        print("Exiting Client")
-                        break
                     elif command.startswith("GET "):
                         file_path = command.split(" ", 1)[1]
                         http_client.get(file_path, client_socket)
