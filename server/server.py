@@ -15,12 +15,11 @@ class HTTPResponse:
             header = "HTTP/1.1 500 Internal Server Error\r\n"
         else:
             header = "HTTP/1.1 400 Bad Request\r\n"
-
         if keep_alive:
             header += "Connection: keep-alive\r\n"
         else:
             header += "Connection: close\r\n"
-
+        header += f"Content-Length: {len(content)}\r\n"
         return header.encode() + b"\r\n" + content
 
 
@@ -103,6 +102,7 @@ class SimpleHTTPServer:
 
     def handle_post(self, client_socket, path, request):
         headers, body = request.split(b'\r\n\r\n', 1)
+
         content_length = int([line for line in headers.split(b'\r\n') if b'Content-Length' in line][0].split(b': ')[1])
         while len(body) < content_length:
             body += client_socket.recv(1024)
